@@ -33,7 +33,10 @@ newtype MsgNo   = MsgNo   Word31 deriving (Eq, Ord, Bounded, Enum, Num, Real, In
 newtype SeqNo   = SeqNo   Word32 deriving (Eq, Ord, Bounded, Enum, Num, Real, Integral, Bits)
 newtype Size    = Size    Word31 deriving (Eq, Ord, Bounded, Enum, Num, Real, Integral, Bits)
 newtype AnsNo   = AnsNo   Word31 deriving (Eq, Ord, Bounded, Enum, Num, Real, Integral, Bits)
-newtype More    = More    Bool   deriving (Eq, Ord, Read, Show, Bounded, Enum)
+data More
+    = NoMore
+    | More
+    deriving (Eq, Ord, Read, Show, Bounded, Enum)
 
 newtype Payload = Payload ByteString deriving (Eq, Show, Read)
 
