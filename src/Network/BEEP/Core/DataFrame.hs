@@ -1,16 +1,15 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, ViewPatterns #-}
 module Network.BEEP.Core.DataFrame where
 
 import Network.BEEP.Core.Word31
 
 import Data.Word (Word32)
 import Data.Bits (Bits)
-import Data.ByteString.Lazy.Char8 (ByteString, pack)
-import Text.ParserCombinators.ReadP as ReadP
+import Data.ByteString.Lazy.Char8 (ByteString)
 
 data DataFrame
     = DataFrame Header Payload
-    deriving (Eq)
+    deriving (Eq, Show, Read)
 
 data Header 
     = MsgHdr Msg
@@ -57,3 +56,23 @@ instance Show AnsNo where showsPrec p (AnsNo x) = showsPrec p x
 instance Read AnsNo where readsPrec = mapReadsPrec AnsNo
 
 mapReadsPrec f p s = fmap (\(x,y) -> (f x, y)) (readsPrec p s)
+
+-- getting at the common stuff
+class HasCommon c where
+    common :: c -> Common
+
+instance HasCommon Common where common = id
+instance HasCommon Msg where common (Msg c)   = c
+instance HasCommon Rpy where common (Rpy c)   = c
+instance HasCommon Ans where common (Ans c _) = c
+instance HasCommon Err where common (Err c)   = c
+instance HasCommon Nul where common (Nul c)   = c
+instance HasCommon Header where 
+    common (MsgHdr hdr) = common hdr
+    common (RpyHdr hdr) = common hdr
+    common (AnsHdr hdr) = common hdr
+    common (ErrHdr hdr) = common hdr
+    common (NulHdr hdr) = common hdr
+
+payloadSize :: HasCommon c => c -> Size
+payloadSize (common -> Common _ _ _ _ sz) = sz
