@@ -1,12 +1,13 @@
-module Network.BEEP.Core.DataFrame.Get (getDataFrame) where
+module Network.BEEP.Core.DataFrame.Get where
 
 import Network.BEEP.Core.Word31
 import Data.Word
 
-import Network.BEEP.Core.DataFrame hiding (common)
+import Network.BEEP.Core.DataFrame.Types hiding (common)
 import Data.ByteString.Lazy.Char8
 import Data.Attoparsec.Char8
 
+-- only guaranteed-stable interface is the 'getDataFrame' function
 getDataFrame :: ByteString -> Either String (ByteString, DataFrame)
 getDataFrame bs = case parse dataFrame bs of
     (rest, Right frame) -> Right (rest, frame)
