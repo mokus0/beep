@@ -33,30 +33,31 @@ header = do
     return hdr
 
 {-# INLINE msgLike #-}
-msgLike :: String -> (Common -> a) -> Parser a
-msgLike tag con = do
-    string (pack tag)
+msgLike :: (Common -> a) -> String -> Parser a
+msgLike con tag = do
+    string (pack tag) <?> tag
     skipBlank
     com <- common
     return (con com)
 
 msg :: Parser Msg
-msg = msgLike "MSG" Msg
+msg = withTag1 (msgLike Msg)
 rpy :: Parser Rpy
-rpy = msgLike "RPY" Rpy
+rpy = withTag1 (msgLike Rpy)
 ans :: Parser Ans
-ans = do
-    ans <- msgLike "ASN" Ans
+ans = withTag1 $ \tag -> do
+    ans <- msgLike Ans tag
+    skipBlank
     ansno <- ansno
     return (ans ansno)
 err :: Parser Err
-err = msgLike "ERR" Err
+err = withTag1 (msgLike Err)
 nul :: Parser Nul
-nul = msgLike "NUL" Nul
+nul = withTag1 (msgLike Nul)
 
 common :: Parser Common
 common = do
-    channel <- channel
+    channel <- channelId
     skipBlank
     msgno   <- msgno
     skipBlank
@@ -67,8 +68,8 @@ common = do
     size    <- size
     return (Common channel msgno more seqno size)
 
-channel :: Parser Channel
-channel = fmap Channel word31
+channelId :: Parser ChannelId
+channelId = fmap ChannelId word31
 
 msgno :: Parser MsgNo
 msgno = fmap MsgNo word31
