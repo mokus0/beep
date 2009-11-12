@@ -24,6 +24,10 @@ class {- (?) Monad f => -} Mapping f m {- (?) | m -> f -} where
     -- mapping module itself.
     createPeer :: PeerSpec m -> Role -> f (PeerHandle m)
     
+    -- |Get the address of the remote peer.  Used when creating a peer
+    -- from a "PeerSpec m"
+    getPeerAddr :: PeerHandle m -> f (PeerAddr m)
+    
     -- |Gracefully close a connection
     disconnect  :: PeerHandle m -> f ()
     
