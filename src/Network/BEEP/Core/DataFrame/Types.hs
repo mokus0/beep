@@ -5,18 +5,21 @@ import Network.BEEP.Core.Word31
 
 import Data.Word (Word32)
 import Data.Bits (Bits)
-import Data.ByteString.Lazy.Char8 (ByteString)
+import Data.ByteString.Lazy (ByteString, length, splitAt)
+import Prelude hiding (length, splitAt)
 
 data DataFrame
-    = DataFrame Header Payload
+    = DataFrame 
+        { frameHeader    :: Header
+        , framePayload   :: Payload}
     deriving (Eq, Show, Read)
 
 data Header 
-    = MsgHdr Msg
-    | RpyHdr Rpy
-    | AnsHdr Ans
-    | ErrHdr Err
-    | NulHdr Nul
+    = MsgHdr !Msg
+    | RpyHdr !Rpy
+    | AnsHdr !Ans
+    | ErrHdr !Err
+    | NulHdr !Nul
     deriving (Eq, Show, Read)
 
 newtype Msg = Msg  Common        deriving (Eq, Show, Read)
@@ -25,7 +28,13 @@ data    Ans = Ans !Common !AnsNo deriving (Eq, Show, Read)
 newtype Err = Err  Common        deriving (Eq, Show, Read)
 newtype Nul = Nul  Common        deriving (Eq, Show, Read)
 
-data Common = Common ChannelId MsgNo More SeqNo Size deriving (Eq, Show, Read)
+data Common = Common !ChannelId !MsgNo !More !SeqNo !Size deriving (Eq, Show, Read)
+
+channelId   (common -> Common c _ _ _ _) = c
+msgNo       (common -> Common _ n _ _ _) = n
+more        (common -> Common _ _ m _ _) = m
+seqNo       (common -> Common _ _ _ s _) = s
+size        (common -> Common _ _ _ _ s) = s
 
 newtype ChannelId = ChannelId Word31 deriving (Eq, Ord, Bounded, Enum, Num, Real, Integral, Bits)
 newtype MsgNo   = MsgNo   Word31 deriving (Eq, Ord, Bounded, Enum, Num, Real, Integral, Bits)
@@ -88,13 +97,17 @@ tagStringOf = tagString . tagOf
 -- getting at the common stuff
 class HasCommon c where
     common :: c -> Common
+    setCommon :: Common -> c -> c
+
+modifyCommon :: HasCommon c => (Common -> Common) -> c -> c
+modifyCommon f thing = setCommon (f (common thing)) thing
 
 instance HasCommon Common where common = id
-instance HasCommon Msg where common (Msg c)   = c
-instance HasCommon Rpy where common (Rpy c)   = c
-instance HasCommon Ans where common (Ans c _) = c
-instance HasCommon Err where common (Err c)   = c
-instance HasCommon Nul where common (Nul c)   = c
+instance HasCommon Msg where common (Msg c)   = c; setCommon c (Msg _)   = Msg c
+instance HasCommon Rpy where common (Rpy c)   = c; setCommon c (Rpy _)   = Rpy c
+instance HasCommon Ans where common (Ans c _) = c; setCommon c (Ans _ n) = Ans c n
+instance HasCommon Err where common (Err c)   = c; setCommon c (Err _)   = Err c
+instance HasCommon Nul where common (Nul c)   = c; setCommon c (Nul _)   = Nul c
 instance HasCommon Header where 
     common (MsgHdr hdr) = common hdr
     common (RpyHdr hdr) = common hdr
@@ -102,5 +115,45 @@ instance HasCommon Header where
     common (ErrHdr hdr) = common hdr
     common (NulHdr hdr) = common hdr
 
-payloadSize :: HasCommon c => c -> Size
-payloadSize (common -> Common _ _ _ _ sz) = sz
+    setCommon c (MsgHdr hdr) = MsgHdr (setCommon c hdr)
+    setCommon c (RpyHdr hdr) = RpyHdr (setCommon c hdr)
+    setCommon c (AnsHdr hdr) = AnsHdr (setCommon c hdr)
+    setCommon c (ErrHdr hdr) = ErrHdr (setCommon c hdr)
+    setCommon c (NulHdr hdr) = NulHdr (setCommon c hdr)
+instance HasCommon DataFrame where
+    common (DataFrame hdr _) = common hdr
+    setCommon c (DataFrame hdr payload) = DataFrame (setCommon c hdr) payload
+
+extendSeqNo :: SeqNo -> Size -> SeqNo
+extendSeqNo (SeqNo seqno) size = SeqNo (seqno + fromIntegral size)
+
+payloadSize :: DataFrame -> Size
+payloadSize (DataFrame hdr (Payload payload)) = fromIntegral (length payload)
+
+reportedPayloadSize :: HasCommon t => t -> Size
+reportedPayloadSize (common -> Common _ _ _ _ sz) = sz
+
+splitCommonAt :: Size -> Common -> (Common, Common)
+splitCommonAt sz (Common chan msg more seq cSz) =
+    ( Common chan msg More  seq                   p1sz
+    , Common chan msg more (extendSeqNo seq p1sz) p2sz
+    ) where 
+        p1sz = min cSz sz
+        p2sz = max 0 (cSz-sz)
+
+splitDataFrameAt :: Size -> DataFrame -> (DataFrame, Maybe DataFrame)
+splitDataFrameAt sz frame@(DataFrame hdr (Payload bs))
+    | sz == origSz  = (frame, Nothing)
+    | otherwise     = (part1, Just part2)
+        where
+            origSz = payloadSize frame
+            sz1 = min sz origSz
+            sz2 = origSz - sz
+            
+            hdr1 = modifyCommon (fst . splitCommonAt sz1) hdr
+            hdr2 = modifyCommon (snd . splitCommonAt sz1) hdr
+            
+            (bs1, bs2) = splitAt (fromIntegral sz) bs
+            
+            part1 = DataFrame hdr1 (Payload bs1)
+            part2 = DataFrame hdr2 (Payload bs2)

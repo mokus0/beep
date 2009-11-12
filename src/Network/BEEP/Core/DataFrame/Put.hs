@@ -3,7 +3,13 @@ module Network.BEEP.Core.DataFrame.Put where
 import Network.BEEP.Core.Word31
 import Data.Word
 
-import Network.BEEP.Core.DataFrame.Types hiding (common)
+import Network.BEEP.Core.DataFrame.Types
+    ( DataFrame(..), Header(..), Payload(..)
+    , Common(..)
+    , Msg(..), Rpy(..), Ans(..), Err(..), Nul(..)
+    , ChannelId(..), MsgNo(..), More(..), SeqNo(..), Size(..), AnsNo(..)
+    , tagStringOf
+    )
 import Data.ByteString.Lazy.Char8
 import Data.Binary.Put
 
@@ -60,18 +66,23 @@ nul :: Nul -> Put
 nul nul@(Nul com) = msgLike (tagStringOf nul) com
 
 common :: Common -> Put
-common (Common (ChannelId channel) (MsgNo msgno) more (SeqNo seqno) (Size size)) = do
-    word31 channel
+common (Common chan msg m s sz) = do
+    channelId chan
     space
-    word31 msgno
+    msgno msg
     space
-    case more of
-        More ->   putWord8 0x2a   {- * -}
-        NoMore -> putWord8 0x2e   {- . -}
+    more m
     space
-    word32 seqno
+    seqno s
     space
-    word31 size
+    size sz
+
+channelId (ChannelId c) = word31 c
+msgno (MsgNo m) = word31 m
+more More   = putWord8 0x2a   {- * -}
+more NoMore = putWord8 0x2e   {- . -}
+seqno (SeqNo s) = word32 s
+size (Size s) = word31 s
 
 word31 :: Word31 -> Put
 word31 x = putLazyByteString (pack (show x))

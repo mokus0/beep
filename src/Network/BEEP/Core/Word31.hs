@@ -24,12 +24,8 @@ instance Ord Word31 where
 instance Real Word31 where
     toRational = toRational . word31toWord32
 instance Integral Word31 where
-    quot (Word31 x) (Word31 y) = Word31 (quot x y)
-    rem  (Word31 x) (Word31 y) = Word31 (rem  x y)
-    div  (Word31 x) (Word31 y) = Word31 (div  x y)
-    mod  (Word31 x) (Word31 y) = Word31 (mod  x y)
-    quotRem (Word31 x) (Word31 y) = case quotRem x y of
-        (q,r) -> (Word31 q, Word31 y)
-    divMod  (Word31 x) (Word31 y) = case divMod x y of
-        (q,r) -> (Word31 q, Word31 y)
+    quotRem x y = case quotRem (word31toWord32 x) (word31toWord32 y) of
+        (q,r) -> (Word31 q, Word31 r)
+    divMod  x y = case divMod (word31toWord32 x) (word31toWord32 y) of
+        (q,r) -> (Word31 q, Word31 r)
     toInteger = toInteger . word31toWord32
