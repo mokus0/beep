@@ -5,7 +5,8 @@
         GeneralizedNewtypeDeriving
   #-}
 module Network.BEEP.Mapping.TCP
-    ( Tcp
+    ( Tcp, PeerAddr(TcpAddr), PeerSpec(TcpSocket)
+    , openTCPConnection, acceptTCPConnection
     ) where
 
 import Prelude hiding (catch)
@@ -267,6 +268,8 @@ acknowledgeFrame sock dataFrame win = do
     let bs = putSeqFrame (seqForFrame dataFrame win)
     sendLazyByteString sock bs
 
+-- |Convenience function to open a TCP socket given the hostname and port of
+-- a computer that is listening for a connection
 openTCPConnection :: String -> PortNumber -> IO Socket
 openTCPConnection host port = do
     hostInfo <- getHostByName host
@@ -281,6 +284,9 @@ openTCPConnection host port = do
     
     return sock
 
+-- |Convenience function to listen for exactly one connection on a given port.
+-- Uses the first-reported local address.  If that's not what you need, you'll have
+-- to write your own ;)
 acceptTCPConnection :: PortNumber -> IO Socket
 acceptTCPConnection port = do
     hostInfo <- getHostEntry

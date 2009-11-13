@@ -3,17 +3,20 @@
   #-}
 module Network.BEEP.Core.Profile where
 
+import {-# SOURCE #-} Network.BEEP.Core.Session.Types
+import Network.BEEP.Core.Mapping
+
 data MalformedMsgResponse p
     = CloseChannel
     | ErrorMsg (ProfileMessage p)
 
-class Profile (f :: * -> *) p where
+class Mapping f m => Profile (f :: * -> *) m p where
     type ChannelState p
     
     type InitMessage p
     type ProfileMessage p
     
-    initialize :: p -> f (Either String (ChannelState p))
+    initialize :: p -> Session m -> f (ChannelState p)
     
     -- what does it do...
     -- need to be able to react to messages, etc...
