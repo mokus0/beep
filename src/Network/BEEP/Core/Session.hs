@@ -23,7 +23,6 @@ newChannelState session chanId profile = do
     chanState  <- P.initialize profile session
     
     msgOut  <- newRef 0
-    msgIn   <- newRef 0
     seqOut  <- newRef 0
     seqIn   <- newRef 0
     
@@ -34,7 +33,6 @@ newChannelState session chanId profile = do
         , chanProfileState  = chanState
         
         , chanNextMsgOut    = msgOut
-        , chanNextMsgIn     = msgIn
         , chanNextSeqOut    = seqOut
         , chanNextSeqIn     = seqIn
         }
@@ -80,7 +78,6 @@ terminateSession session = do
 
 -- low level channel state functions
 channelGetAndIncrementMsgOut ch = atomicModifyRef (chanNextMsgOut ch) (\a -> (succ a, a))
-channelGetAndIncrementMsgIn  ch = atomicModifyRef (chanNextMsgIn  ch) (\a -> (succ a, a))
 channelGetAndExtendSeqOut ch sz = atomicModifyRef (chanNextSeqOut ch) (\a -> (extendSeqNo a sz, a))
 channelGetAndExtendSeqIn  ch sz = atomicModifyRef (chanNextSeqIn  ch) (\a -> (extendSeqNo a sz, a))
 
@@ -124,10 +121,11 @@ sendNull channel msgno = do
 
 receiveFrame :: (Monad f, M.Mapping f m) => Channel f m p -> f DataFrame
 receiveFrame channel = do
-    -- TODO: think about concurrency as it relates to expected values
+    -- TODO: think about concurrency as it relates to expected values (msgno, seqno, etc)
+    -- TODO: receive only on the requested channel!
     frame <- M.receive (sessionHandle (chanSession channel))
     
-    expectedMsg <- channelGetAndIncrementMsgIn channel
     expectedSeq <- channelGetAndExtendSeqIn    channel (size frame)
-    
-    return frame
+    if expectedSeq /= seqNo frame
+        then fail ("Frame received out-of-sequence on channel " ++ show (channelId frame) ++ ": " ++ show frame)
+        else return frame

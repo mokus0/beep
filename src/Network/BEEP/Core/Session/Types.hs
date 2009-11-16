@@ -25,7 +25,6 @@ data Channel f m p = Channel
     , chanId            :: ChannelId
     , chanProfile       :: p
     , chanNextMsgOut    :: Ref f MsgNo
-    , chanNextMsgIn     :: Ref f MsgNo
     , chanNextSeqOut    :: Ref f SeqNo
     , chanNextSeqIn     :: Ref f SeqNo
     , chanProfileState  :: P.ProfileState p
