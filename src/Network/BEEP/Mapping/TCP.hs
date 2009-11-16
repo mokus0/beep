@@ -14,8 +14,7 @@ import Control.Exception
 
 import Network.BEEP.Core.Mapping
 import Network.BEEP.Mapping.TCP.Seq
-import Network.BEEP.Core.DataFrame.Types
-import Network.BEEP.Core.DataFrame.Put (putDataFrame)
+import Network.BEEP.Core.DataFrame
 import Network.BEEP.Core.DataFrame.Get (getDataFrameOr, Result(..))
 import Network.BSD
 import Network.Socket
@@ -68,7 +67,9 @@ withConn cxt (TcpState {tcpHandle = hstream}) action = bracket
             throw err
 
 instance Mapping IO Tcp where
-    data PeerAddr Tcp = TcpAddr String PortNumber
+    data PeerAddr Tcp 
+        = TcpAddr String PortNumber
+        | SockAddr SockAddr
     data PeerSpec Tcp = TcpSocket Socket
     
     data PeerHandle Tcp = TcpState
@@ -99,6 +100,11 @@ instance Mapping IO Tcp where
         
         forkTcpManager sock conn
         return conn
+    
+    getPeerAddr conn =  withConn "getPeerAddr" conn $ \handle -> do
+        sockAddr <- getPeerName handle
+        return (SockAddr sockAddr)
+    
     disconnect = terminate
     terminate (TcpState {tcpHandle = handle}) = 
         bracket 
@@ -135,7 +141,6 @@ instance Mapping IO Tcp where
     
     send conn frame = withConn "send" conn $ \_ -> do
         writeChan (tcpOutboundFrames conn) frame
-        return True
 
 doReceive recvSize stash sock = do
     -- INVARIANT: stash MVar must remain full upon exit.
@@ -153,8 +158,8 @@ doReceive recvSize stash sock = do
                     go parseRest Nothing
                 Done rest frame -> do
                     putMVar stash $ if BL.null rest
-                        then Just rest
-                        else Nothing
+                        then Nothing
+                        else Just rest
                     
                     return frame
     
@@ -296,6 +301,7 @@ acceptTCPConnection port = do
     when (null hostAddrs) $ fail ("acceptTCPConnection: No addresses known for host")
 
     listenSock <- socket AF_INET Stream defaultProtocol
+    setSocketOption listenSock ReuseAddr 1
     bindSocket listenSock addr
     listen listenSock 0
     (sock, sockAddr) <- accept listenSock

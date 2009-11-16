@@ -5,7 +5,7 @@ import Network.BEEP.Core.Word31
 
 import Data.Word (Word32)
 import Data.Bits (Bits)
-import Data.ByteString.Lazy (ByteString, length, splitAt)
+import Data.ByteString.Lazy (ByteString, length, splitAt, empty)
 import Prelude hiding (length, splitAt)
 
 data DataFrame
@@ -124,36 +124,3 @@ instance HasCommon DataFrame where
     common (DataFrame hdr _) = common hdr
     setCommon c (DataFrame hdr payload) = DataFrame (setCommon c hdr) payload
 
-extendSeqNo :: SeqNo -> Size -> SeqNo
-extendSeqNo (SeqNo seqno) size = SeqNo (seqno + fromIntegral size)
-
-payloadSize :: DataFrame -> Size
-payloadSize (DataFrame hdr (Payload payload)) = fromIntegral (length payload)
-
-reportedPayloadSize :: HasCommon t => t -> Size
-reportedPayloadSize (common -> Common _ _ _ _ sz) = sz
-
-splitCommonAt :: Size -> Common -> (Common, Common)
-splitCommonAt sz (Common chan msg more seq cSz) =
-    ( Common chan msg More  seq                   p1sz
-    , Common chan msg more (extendSeqNo seq p1sz) p2sz
-    ) where 
-        p1sz = min cSz sz
-        p2sz = max 0 (cSz-sz)
-
-splitDataFrameAt :: Size -> DataFrame -> (DataFrame, Maybe DataFrame)
-splitDataFrameAt sz frame@(DataFrame hdr (Payload bs))
-    | sz == origSz  = (frame, Nothing)
-    | otherwise     = (part1, Just part2)
-        where
-            origSz = payloadSize frame
-            sz1 = min sz origSz
-            sz2 = origSz - sz
-            
-            hdr1 = modifyCommon (fst . splitCommonAt sz1) hdr
-            hdr2 = modifyCommon (snd . splitCommonAt sz1) hdr
-            
-            (bs1, bs2) = splitAt (fromIntegral sz) bs
-            
-            part1 = DataFrame hdr1 (Payload bs1)
-            part2 = DataFrame hdr2 (Payload bs2)

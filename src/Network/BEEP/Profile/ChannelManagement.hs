@@ -11,7 +11,7 @@ import Network.BEEP.Core.Mapping
 data ChannelManagement = ChannelManagement
 
 data CMInitMessage = Greeting
-data CMMessage
+data CMMessage  -- should the types distinguish how the messages may be used?  Probably...
     = Start
     | Profile
     | Error
@@ -19,6 +19,10 @@ data CMMessage
     | Ok
 -- use type system to tie messages to frame types?
 
-instance Mapping IO m => Profile IO m ChannelManagement where
+instance (Monad f, Mapping f m) => Profile f m ChannelManagement where
+    data ProfileState ChannelManagement = CMState
     type InitMessage    ChannelManagement = CMInitMessage
     type ProfileMessage ChannelManagement = CMMessage
+    
+    initialize ChannelManagement session = do
+        return CMState

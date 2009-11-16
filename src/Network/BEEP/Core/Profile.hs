@@ -11,12 +11,12 @@ data MalformedMsgResponse p
     | ErrorMsg (ProfileMessage p)
 
 class Mapping f m => Profile (f :: * -> *) m p where
-    type ChannelState p
+    data ProfileState p
     
     type InitMessage p
     type ProfileMessage p
     
-    initialize :: p -> Session m -> f (ChannelState p)
+    initialize :: p -> Session f m -> f (ProfileState p)
     
     -- what does it do...
     -- need to be able to react to messages, etc...

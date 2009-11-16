@@ -1,3 +1,4 @@
+{-# LANGUAGE KindSignatures #-}
 module Network.BEEP.Core.Session.Types where
 
-data Session m
+data Session (f :: * -> *) m

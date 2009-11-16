@@ -8,4 +8,4 @@ import Network.BEEP.Core.Profile
 import Network.BEEP.Core.Mapping
 
 data ChannelManagement = ChannelManagement
-instance Mapping IO m => Profile IO m ChannelManagement
+instance (Monad f, Mapping f m) => Profile f m ChannelManagement

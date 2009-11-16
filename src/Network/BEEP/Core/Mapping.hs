@@ -37,6 +37,7 @@ class {- (?) Monad f => -} Mapping f m {- (?) | m -> f -} where
     -- |Check whether the connection is still open
     isConnected :: PeerHandle m -> f Bool
     
+    -- |Check which role (Initiator or Listener) this peer is performing in the session.
     role        :: PeerHandle m -> f Role
     
     -- |Used to inform the mapping of a new channel
@@ -45,5 +46,5 @@ class {- (?) Monad f => -} Mapping f m {- (?) | m -> f -} where
     freeChannel :: PeerHandle m -> ChannelId -> f ()
     
     -- | non-blocking try-to-send only for now...
-    send        :: PeerHandle m -> DataFrame -> f Bool
+    send        :: PeerHandle m -> DataFrame -> f ()
     receive     :: PeerHandle m -> f DataFrame

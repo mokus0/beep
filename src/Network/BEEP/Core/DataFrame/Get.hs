@@ -6,13 +6,13 @@ module Network.BEEP.Core.DataFrame.Get
 import Network.BEEP.Core.Word31
 import Data.Word
 
+import qualified Network.BEEP.Core.DataFrame.Types as DataFrame
 import Network.BEEP.Core.DataFrame.Types 
     ( DataFrame(..), Header(..), Payload(..)
     , Common(..)
     , Msg(..), Rpy(..), Ans(..), Err(..), Nul(..)
     , ChannelId(..), MsgNo(..), More(..), SeqNo(..), Size(..), AnsNo(..)
     , withTag1
-    , reportedPayloadSize
     )
 import Data.ByteString.Lazy.Char8 as BL
 import Data.Attoparsec.Incremental.Char8
@@ -26,7 +26,7 @@ getDataFrameOr other bs = parse (fmap Left other <|> fmap Right dataFrame) bs
 dataFrame :: Parser r DataFrame
 dataFrame = do
     hdr <- header
-    dat <- payload (reportedPayloadSize hdr)
+    dat <- payload (DataFrame.size hdr)
     trailer
     return (DataFrame hdr dat)
 
