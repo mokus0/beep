@@ -8,9 +8,10 @@ import Network.BEEP.Core.Session
 import Network.BEEP.Core.Profile
 import Network.BEEP.Core.Mapping
 
+import Network.URI
+
 data ChannelManagement = ChannelManagement
 
-data CMInitMessage = Greeting
 data CMMessage  -- should the types distinguish how the messages may be used?  Probably...
     = Start
     | Profile
@@ -21,8 +22,7 @@ data CMMessage  -- should the types distinguish how the messages may be used?  P
 
 instance (Monad f, Mapping f m) => Profile f m ChannelManagement where
     data ProfileState ChannelManagement = CMState
-    type InitMessage    ChannelManagement = CMInitMessage
-    type ProfileMessage ChannelManagement = CMMessage
+    data Message      ChannelManagement = Greeting [URI]
     
     initialize ChannelManagement session = do
         return CMState

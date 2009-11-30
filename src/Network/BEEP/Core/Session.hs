@@ -14,6 +14,7 @@ import qualified Network.BEEP.Core.Profile as P
 import {-# SOURCE #-} Network.BEEP.Profile.ChannelManagement
 
 import Data.ByteString.Lazy as BL
+import Network.URI
 
 import Control.Monad.Fix
 import Data.StateRef
@@ -37,8 +38,8 @@ newChannelState session chanId profile = do
         , chanNextSeqIn     = seqIn
         }
 
-initiateSession :: (MonadFix f, HasRef f, M.Mapping f m) => M.PeerAddr m -> f (Session f m)
-initiateSession addr = mdo
+initiateSession :: (MonadFix f, HasRef f, M.Mapping f m) => M.PeerAddr m -> [URI] -> f (Session f m)
+initiateSession addr profiles = mdo
     handle <- M.initiate addr
     chan0 <- newChannelState session 0 ChannelManagement
     channels <- newRef (Map.singleton 0 (SomeChannel chan0))
@@ -50,10 +51,14 @@ initiateSession addr = mdo
             , sessionChanZero   = chan0
             , sessionChannels   = channels
             }
+    
+    let greeting = fmtMessage (Greeting profiles)
+    sendReply chan0 0 greeting
+    
     return session
 
-createSession :: (MonadFix f, HasRef f,  M.Mapping f m) => M.PeerSpec m -> M.Role -> f (Session f m)
-createSession peer role = mdo
+createSession :: (MonadFix f, HasRef f,  M.Mapping f m) => M.PeerSpec m -> M.Role -> [URI] -> f (Session f m)
+createSession peer role profiles = mdo
     handle <- M.createPeer peer role
     addr   <- M.getPeerAddr handle
     chan0 <- newChannelState session 0 ChannelManagement
@@ -66,6 +71,10 @@ createSession peer role = mdo
             , sessionChanZero   = chan0
             , sessionChannels   = channels
             }
+    
+    let greeting = fmtMessage (Greeting profiles)
+    sendReply chan0 0 greeting
+    
     return session
 
 disconnectSession :: M.Mapping f m => Session f m -> f ()
