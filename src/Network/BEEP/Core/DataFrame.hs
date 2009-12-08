@@ -16,7 +16,7 @@ import Network.BEEP.Core.DataFrame.Put (putDataFrame)
 import qualified Data.ByteString.Lazy as BL
 
 payloadSize :: DataFrame -> Size
-payloadSize (DataFrame hdr (Payload payload)) = fromIntegral (BL.length payload)
+payloadSize (DataFrame hdr payload) = fromIntegral (BL.length payload)
 
 reportedPayloadSize :: HasCommon t => t -> Size
 reportedPayloadSize (common -> Common _ _ _ _ sz) = sz
@@ -33,7 +33,7 @@ splitCommonAt sz (Common chan msg more seq cSz) =
         p2sz = max 0 (cSz-sz)
 
 splitDataFrameAt :: Size -> DataFrame -> (DataFrame, Maybe DataFrame)
-splitDataFrameAt sz frame@(DataFrame hdr (Payload bs))
+splitDataFrameAt sz frame@(DataFrame hdr bs)
     | sz == origSz  = (frame, Nothing)
     | otherwise     = (part1, Just part2)
         where
@@ -46,11 +46,11 @@ splitDataFrameAt sz frame@(DataFrame hdr (Payload bs))
             
             (bs1, bs2) = BL.splitAt (fromIntegral sz) bs
             
-            part1 = DataFrame hdr1 (Payload bs1)
-            part2 = DataFrame hdr2 (Payload bs2)
+            part1 = DataFrame hdr1 bs1
+            part2 = DataFrame hdr2 bs2
 
-mkMsg c m s   bs = DataFrame (MsgHdr (Msg (Common c m NoMore s (fromIntegral $ BL.length bs))  )) (Payload bs)
-mkRpy c m s   bs = DataFrame (RpyHdr (Rpy (Common c m NoMore s (fromIntegral $ BL.length bs))  )) (Payload bs)
-mkAns c m s a bs = DataFrame (AnsHdr (Ans (Common c m NoMore s (fromIntegral $ BL.length bs)) a)) (Payload bs)
-mkErr c m s   bs = DataFrame (ErrHdr (Err (Common c m NoMore s (fromIntegral $ BL.length bs))  )) (Payload bs)
-mkNul c m s      = DataFrame (NulHdr (Nul (Common c m NoMore s 0                            )  )) (Payload BL.empty)
+mkMsg c m s   bs = DataFrame (MsgHdr (Msg (Common c m NoMore s (fromIntegral $ BL.length bs))  )) bs
+mkRpy c m s   bs = DataFrame (RpyHdr (Rpy (Common c m NoMore s (fromIntegral $ BL.length bs))  )) bs
+mkAns c m s a bs = DataFrame (AnsHdr (Ans (Common c m NoMore s (fromIntegral $ BL.length bs)) a)) bs
+mkErr c m s   bs = DataFrame (ErrHdr (Err (Common c m NoMore s (fromIntegral $ BL.length bs))  )) bs
+mkNul c m s      = DataFrame (NulHdr (Nul (Common c m NoMore s 0                            )  )) BL.empty

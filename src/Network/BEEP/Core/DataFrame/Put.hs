@@ -4,7 +4,7 @@ import Network.BEEP.Core.Word31
 import Data.Word
 
 import Network.BEEP.Core.DataFrame.Types
-    ( DataFrame(..), Header(..), Payload(..)
+    ( DataFrame(..), Header(..)
     , Common(..)
     , Msg(..), Rpy(..), Ans(..), Err(..), Nul(..)
     , ChannelId(..), MsgNo(..), More(..), SeqNo(..), Size(..), AnsNo(..)
@@ -90,5 +90,5 @@ word31 x = putLazyByteString (pack (show x))
 word32 :: Word32 -> Put
 word32 x = putLazyByteString (pack (show x))
 
-payload :: Payload -> Put
-payload (Payload bs) = putLazyByteString bs
+payload :: ByteString -> Put
+payload = putLazyByteString

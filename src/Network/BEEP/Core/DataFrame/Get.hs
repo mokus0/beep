@@ -8,7 +8,7 @@ import Data.Word
 
 import qualified Network.BEEP.Core.DataFrame.Types as DataFrame
 import Network.BEEP.Core.DataFrame.Types 
-    ( DataFrame(..), Header(..), Payload(..)
+    ( DataFrame(..), Header(..)
     , Common(..)
     , Msg(..), Rpy(..), Ans(..), Err(..), Nul(..)
     , ChannelId(..), MsgNo(..), More(..), SeqNo(..), Size(..), AnsNo(..)
@@ -105,10 +105,10 @@ word31 = fmap fromInteger integer
 word32 :: Parser r Word32
 word32 = fmap fromInteger integer
 
-payload :: Size -> Parser r Payload
+payload :: Size -> Parser r ByteString
 payload sz = do
     dat <- takeCount (fromIntegral sz)
-    return (Payload dat)
+    return dat
 
 trailer :: Parser r ()
 trailer = do

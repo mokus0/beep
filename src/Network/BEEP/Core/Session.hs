@@ -13,6 +13,7 @@ import qualified Network.BEEP.Core.Mapping as M
 import qualified Network.BEEP.Core.Profile as P
 import {-# SOURCE #-} Network.BEEP.Profile.ChannelManagement
 
+import Data.ByteString.Class
 import Data.ByteString.Lazy as BL
 import Network.URI
 
@@ -52,7 +53,7 @@ initiateSession addr profiles = mdo
             , sessionChannels   = channels
             }
     
-    let greeting = fmtMessage (Greeting profiles)
+    let greeting = toLazyByteString (Greeting profiles)
     sendReply chan0 0 greeting
     
     return session
@@ -72,7 +73,7 @@ createSession peer role profiles = mdo
             , sessionChannels   = channels
             }
     
-    let greeting = fmtMessage (Greeting profiles)
+    let greeting = toLazyByteString (Greeting profiles)
     sendReply chan0 0 greeting
     
     return session

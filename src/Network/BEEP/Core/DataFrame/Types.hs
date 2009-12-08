@@ -11,7 +11,7 @@ import Prelude hiding (length, splitAt)
 data DataFrame
     = DataFrame 
         { frameHeader    :: Header
-        , framePayload   :: Payload}
+        , framePayload   :: ByteString}
     deriving (Eq, Show, Read)
 
 data Header 
@@ -45,8 +45,6 @@ data More
     = NoMore
     | More
     deriving (Eq, Ord, Read, Show, Bounded, Enum)
-
-newtype Payload = Payload ByteString deriving (Eq, Show, Read)
 
 -- read/show instances for Num types without annoying constructors
 instance Show ChannelId where showsPrec p (ChannelId x) = showsPrec p x
