@@ -2,6 +2,7 @@
         MultiParamTypeClasses, FlexibleInstances,
         FlexibleContexts
   #-}
+{-# OPTIONS_GHC -fno-warn-missing-methods #-}
 module Network.BEEP.Profile.ChannelManagement where
 
 import Network.BEEP.Core.Profile

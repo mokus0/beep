@@ -1,4 +1,5 @@
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -fno-warn-overlapping-patterns #-}
 module Network.BEEP.Core.DataFrame
     ( module Network.BEEP.Core.DataFrame.Types
     , getDataFrame, putDataFrame

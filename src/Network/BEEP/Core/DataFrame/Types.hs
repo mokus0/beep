@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, ViewPatterns #-}
+{-# OPTIONS_GHC -fno-warn-overlapping-patterns #-}
 module Network.BEEP.Core.DataFrame.Types where
 
 import Network.BEEP.Core.Word31
@@ -100,7 +101,7 @@ class HasCommon c where
 modifyCommon :: HasCommon c => (Common -> Common) -> c -> c
 modifyCommon f thing = setCommon (f (common thing)) thing
 
-instance HasCommon Common where common = id
+instance HasCommon Common where common = id; setCommon = const
 instance HasCommon Msg where common (Msg c)   = c; setCommon c (Msg _)   = Msg c
 instance HasCommon Rpy where common (Rpy c)   = c; setCommon c (Rpy _)   = Rpy c
 instance HasCommon Ans where common (Ans c _) = c; setCommon c (Ans _ n) = Ans c n

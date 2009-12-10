@@ -8,6 +8,9 @@ import Network.BEEP.Core.Mapping
 
 import Data.ByteString.Class
 
+-- |In the future these "LazyByteString" contexts may be replaced with
+-- something more specialized.  Goals in that change may include
+-- improving parsing failure modes and adding support for partial messages.
 class ( Mapping f m
       , LazyByteString (Message p)
       , LazyByteString (Reply   p)
@@ -16,13 +19,8 @@ class ( Mapping f m
     
     initialize :: p -> Session f m -> f (ProfileState p)
     
-    -- partial message support?
     data Message p
     data Reply   p
     
-    -- what does it do...
-    -- need to be able to react to messages, etc...
-    -- and do what?
-    -- deliver to client via hooks, Chan, etc?
-    -- 
-    -- react :: p -> DataFrame -> ChannelState p -> f (ChannelState p)
+    receiveMessage  :: ProfileState p -> Message p -> f ()
+    receiveReply    :: ProfileState p -> Reply   p -> f ()
