@@ -16,5 +16,27 @@ description:            I'm too lame to describe my project
 
 Library
   hs-source-dirs:       src
-  exposed-modules:      
-  build-depends:        base >= 3, stateref == 0.3.*
+  exposed-modules:      Network.BEEP.Core
+                        Network.BEEP.Core.DataFrame
+                        Network.BEEP.Core.Mapping
+                        Network.BEEP.Core.Profile
+                        Network.BEEP.Core.Session
+                        Network.BEEP.Core.Word31
+                        Network.BEEP.Mapping.TCP
+                        Network.BEEP.Profile.ChannelManagement
+  other-modules:        Network.BEEP.Core.DataFrame.Get
+                        Network.BEEP.Core.DataFrame.Put
+                        Network.BEEP.Core.DataFrame.Types
+                        
+                        
+  build-depends:        attoparsec,
+                        base >= 4,
+                        binary,
+                        bytestring, 
+                        bytestring-class,
+                        containers,
+                        monad-loops,
+                        network,
+                        network-bytestring,
+                        stateref == 0.3.*,
+                        stm
