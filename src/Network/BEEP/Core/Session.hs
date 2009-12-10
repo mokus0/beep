@@ -40,27 +40,18 @@ newChannelState session chanId profile = do
         }
 
 initiateSession :: (MonadFix f, HasRef f, M.Mapping f m) => M.PeerAddr m -> [URI] -> f (Session f m)
-initiateSession addr profiles = mdo
+initiateSession addr profiles = do
     handle <- M.initiate addr
-    chan0 <- newChannelState session 0 ChannelManagement
-    channels <- newRef (Map.singleton 0 (SomeChannel chan0))
-    M.newChannel handle 0
-    
-    let session = Session
-            { sessionPeerAddr   = Just addr
-            , sessionHandle     = handle
-            , sessionChanZero   = chan0
-            , sessionChannels   = channels
-            }
-    
-    let greeting = toLazyByteString (Greeting profiles)
-    sendReply chan0 0 greeting
-    
-    return session
+    startSession handle profiles
 
 createSession :: (MonadFix f, HasRef f,  M.Mapping f m) => M.PeerSpec m -> M.Role -> [URI] -> f (Session f m)
-createSession peer role profiles = mdo
+createSession peer role profiles = do
     handle <- M.createPeer peer role
+    
+    startSession handle profiles
+
+startSession :: (MonadFix f, HasRef f, M.Mapping f m) => M.PeerHandle m -> [URI] -> f (Session f m)
+startSession handle profiles = mdo
     addr   <- M.getPeerAddr handle
     chan0 <- newChannelState session 0 ChannelManagement
     channels <- newRef (Map.singleton 0 (SomeChannel chan0))
@@ -73,10 +64,10 @@ createSession peer role profiles = mdo
             , sessionChannels   = channels
             }
     
-    let greeting = toLazyByteString (Greeting profiles)
-    sendReply chan0 0 greeting
+    sendReply chan0 0 (mkGreeting profiles)
     
     return session
+
 
 disconnectSession :: M.Mapping f m => Session f m -> f ()
 disconnectSession session = do

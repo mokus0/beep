@@ -8,16 +8,17 @@ import Network.BEEP.Core.Mapping
 
 import Data.ByteString.Class
 
-class (Mapping f m, LazyByteString (Message p)) => Profile (f :: * -> *) m p where
+class ( Mapping f m
+      , LazyByteString (Message p)
+      , LazyByteString (Reply   p)
+      ) => Profile (f :: * -> *) m p where
     data ProfileState p
     
     initialize :: p -> Session f m -> f (ProfileState p)
     
     -- partial message support?
-    type Message p
-    type Reply   p
-    type Answer  p
-    type Error   p
+    data Message p
+    data Reply   p
     
     -- what does it do...
     -- need to be able to react to messages, etc...
