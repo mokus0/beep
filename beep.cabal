@@ -7,7 +7,7 @@ build-type:             Simple
 
 author:                 James Cook <your email here>
 maintainer:             James Cook <your email here>
-license:                Unspecified
+license:                BSD3
 homepage:               /dev/null
 
 category:               Unclassified
@@ -15,6 +15,7 @@ synopsis:               I'm too lame to describe my project
 description:            I'm too lame to describe my project
 
 Library
+  ghc-options:          -fwarn-unused-imports
   hs-source-dirs:       src
   exposed-modules:      Network.BEEP.Core
                         Network.BEEP.Core.DataFrame
