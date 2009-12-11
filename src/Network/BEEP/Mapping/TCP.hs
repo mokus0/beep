@@ -18,21 +18,14 @@ import Network.BEEP.Core.DataFrame
 import Network.BEEP.Core.DataFrame.Get (getDataFrameOr, Result(..))
 import Network.BSD
 import Network.Socket
-import qualified Data.ByteString.Char8 as BS
-import qualified Network.Socket.ByteString as BS
 import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Network.Socket.ByteString.Lazy as BL
-import Data.Maybe
-import Data.Int
 
 import Control.Concurrent
 import Control.Concurrent.STM
 
 import Control.Monad
 import Control.Monad.Loops
-
-import Data.Word
-import Data.Bits (Bits)
 
 -- could use IntMap, but there's no guarantee that Int is as big as ChannelId
 import qualified Data.Map as M

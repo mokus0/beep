@@ -25,6 +25,9 @@ Library
                         Network.BEEP.Core.Word31
                         Network.BEEP.Mapping.TCP
                         Network.BEEP.Profile.ChannelManagement
+                        Network.BEEP.Profile.ChannelManagement.Types
+                        Network.BEEP.Profile.ChannelManagement.Input
+                        Network.BEEP.Profile.ChannelManagement.Output
   other-modules:        Network.BEEP.Core.DataFrame.Get
                         Network.BEEP.Core.DataFrame.Put
                         Network.BEEP.Core.DataFrame.Types
@@ -40,4 +43,5 @@ Library
                         network,
                         network-bytestring,
                         stateref == 0.3.*,
-                        stm
+                        stm,
+                        xml

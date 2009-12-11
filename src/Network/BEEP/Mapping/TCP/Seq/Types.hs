@@ -14,7 +14,6 @@ import Network.BEEP.Core.DataFrame
     , HasTag(..), Tag(..)
     , mapReadsPrec
     )
-import qualified Network.BEEP.Core.DataFrame.Put as Put
 
 import Data.Bits (Bits)
 

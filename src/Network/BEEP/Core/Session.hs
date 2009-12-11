@@ -11,9 +11,9 @@ import Network.BEEP.Core.Session.Types
 import Network.BEEP.Core.DataFrame
 import qualified Network.BEEP.Core.Mapping as M
 import qualified Network.BEEP.Core.Profile as P
-import {-# SOURCE #-} Network.BEEP.Profile.ChannelManagement
+import Network.BEEP.Profile.ChannelManagement
+import Network.BEEP.Profile.ChannelManagement.Output
 
-import Data.ByteString.Class
 import Data.ByteString.Lazy as BL
 import Network.URI
 
@@ -42,16 +42,16 @@ newChannelState session chanId profile = do
 initiateSession :: (MonadFix f, HasRef f, M.Mapping f m) => M.PeerAddr m -> [URI] -> f (Session f m)
 initiateSession addr profiles = do
     handle <- M.initiate addr
-    startSession handle profiles
+    startSession handle defaultFeatures [] profiles
 
 createSession :: (MonadFix f, HasRef f,  M.Mapping f m) => M.PeerSpec m -> M.Role -> [URI] -> f (Session f m)
 createSession peer role profiles = do
     handle <- M.createPeer peer role
     
-    startSession handle profiles
+    startSession handle defaultFeatures [] profiles
 
-startSession :: (MonadFix f, HasRef f, M.Mapping f m) => M.PeerHandle m -> [URI] -> f (Session f m)
-startSession handle profiles = mdo
+startSession :: (MonadFix f, HasRef f, M.Mapping f m) => M.PeerHandle m -> [Feature] -> [Language] -> [URI] -> f (Session f m)
+startSession handle features languages profiles = mdo
     addr   <- M.getPeerAddr handle
     chan0 <- newChannelState session 0 ChannelManagement
     channels <- newRef (Map.singleton 0 (SomeChannel chan0))
@@ -64,7 +64,7 @@ startSession handle profiles = mdo
             , sessionChannels   = channels
             }
     
-    sendReply chan0 0 (mkGreeting profiles)
+    sendReply chan0 0 (mkGreeting features languages profiles)
     
     return session
 

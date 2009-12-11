@@ -5,7 +5,7 @@ module Network.BEEP.Core.Session.Types where
 import Network.BEEP.Core.DataFrame.Types
 import qualified Network.BEEP.Core.Mapping as M
 import qualified Network.BEEP.Core.Profile as P
-import {-# SOURCE #-} Network.BEEP.Profile.ChannelManagement
+import Network.BEEP.Profile.ChannelManagement.Types
 
 import Data.StateRef
 import Data.Map (Map)
