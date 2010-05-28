@@ -20,6 +20,8 @@ import Network.BSD
 import Network.Socket
 import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Network.Socket.ByteString.Lazy as BL
+import qualified Data.ByteString.Char8 as BS
+import qualified Network.Socket.ByteString as BS
 
 import Control.Concurrent
 import Control.Concurrent.STM
@@ -140,17 +142,17 @@ doReceive recvSize stash sock = do
     -- at any time, not just when listening for other packets
     let go parse stashed = do
             stuff <- case stashed of 
-                Nothing -> BL.recv sock recvSize
+                Nothing -> BS.recv sock recvSize
                 Just x -> return x
             case parse stuff of
-                Failed err -> do
+                Fail bs cx err -> do
                     putMVar stash Nothing
                     fail ("receive: Parse failure (" ++ err ++ ") near " ++ show stuff)
                 Partial parseRest -> do
                     -- frame is incomplete, get more data
                     go parseRest Nothing
                 Done rest frame -> do
-                    putMVar stash $ if BL.null rest
+                    putMVar stash $ if BS.null rest
                         then Nothing
                         else Just rest
                     

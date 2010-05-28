@@ -5,6 +5,7 @@ module Network.BEEP.Core.DataFrame.Get
 
 import Network.BEEP.Core.Word31
 import Data.Word
+import Control.Applicative
 
 import qualified Network.BEEP.Core.DataFrame.Types as DataFrame
 import Network.BEEP.Core.DataFrame.Types 
@@ -14,23 +15,24 @@ import Network.BEEP.Core.DataFrame.Types
     , ChannelId(..), MsgNo(..), More(..), SeqNo(..), Size(..), AnsNo(..)
     , withTag1
     )
-import Data.ByteString.Lazy.Char8 as BL
-import Data.Attoparsec.Incremental.Char8
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy.Char8 as BL
+import Data.Attoparsec.Char8 as Atto
 
-getDataFrame :: ByteString -> Result DataFrame
+getDataFrame :: BS.ByteString -> Result DataFrame
 getDataFrame bs = parse dataFrame bs
 
-getDataFrameOr :: Parser (Either other DataFrame) other -> ByteString -> Result (Either other DataFrame)
+-- getDataFrameOr :: Parser (Either other DataFrame) other -> ByteString -> Result (Either other DataFrame)
 getDataFrameOr other bs = parse (fmap Left other <|> fmap Right dataFrame) bs
 
-dataFrame :: Parser r DataFrame
+dataFrame :: Parser DataFrame
 dataFrame = do
     hdr <- header
     dat <- payload (DataFrame.size hdr)
     trailer
     return (DataFrame hdr dat)
 
-header :: Parser r Header
+header :: Parser Header
 header = do
     hdr <- choice
         [ fmap MsgHdr msg
@@ -43,29 +45,29 @@ header = do
     return hdr
 
 {-# INLINE msgLike #-}
-msgLike :: (Common -> a) -> String -> Parser r a
+msgLike :: (Common -> a) -> String -> Parser a
 msgLike con tag = do
-    string (pack tag) <?> tag
+    string (BS.pack tag) <?> tag
     skipBlank
     com <- common
     return (con com)
 
-msg :: Parser r Msg
+msg :: Parser Msg
 msg = withTag1 (msgLike Msg)
-rpy :: Parser r Rpy
+rpy :: Parser Rpy
 rpy = withTag1 (msgLike Rpy)
-ans :: Parser r Ans
+ans :: Parser Ans
 ans = withTag1 $ \tag -> do
     ans <- msgLike Ans tag
     skipBlank
     ansno <- ansno
     return (ans ansno)
-err :: Parser r Err
+err :: Parser Err
 err = withTag1 (msgLike Err)
-nul :: Parser r Nul
+nul :: Parser Nul
 nul = withTag1 (msgLike Nul)
 
-common :: Parser r Common
+common :: Parser Common
 common = do
     channel <- channelId
     skipBlank
@@ -78,49 +80,49 @@ common = do
     size    <- size
     return (Common channel msgno more seqno size)
 
-channelId :: Parser r ChannelId
+channelId :: Parser ChannelId
 channelId = fmap ChannelId word31
 
-msgno :: Parser r MsgNo
+msgno :: Parser MsgNo
 msgno = fmap MsgNo word31
 
-more :: Parser r More
+more :: Parser More
 more = choice
     [ char '*' >> return More
     , char '.' >> return NoMore
     ]
 
-seqno :: Parser r SeqNo
+seqno :: Parser SeqNo
 seqno = fmap SeqNo word32
 
-size :: Parser r Size
+size :: Parser Size
 size = fmap Size word31
 
-ansno :: Parser r AnsNo
+ansno :: Parser AnsNo
 ansno = fmap AnsNo word31
 
-word31 :: Parser r Word31
-word31 = fmap fromInteger integer
+word31 :: Parser Word31
+word31 = fmap fromInteger decimal
 
-word32 :: Parser r Word32
-word32 = fmap fromInteger integer
+word32 :: Parser Word32
+word32 = fmap fromInteger decimal
 
-payload :: Size -> Parser r ByteString
+payload :: Size -> Parser BL.ByteString
 payload sz = do
-    dat <- takeCount (fromIntegral sz)
-    return dat
+    dat <- Atto.take (fromIntegral sz)
+    return (BL.fromChunks [dat])
 
-trailer :: Parser r ()
+trailer :: Parser ()
 trailer = do
-    string (pack "END") <?> "END"
+    string (BS.pack "END") <?> "END"
     crlf
 
-crlf :: Parser r ()
+crlf :: Parser ()
 crlf = do
     skipBlank
     optional (char '\r' <?> "CR LF")
     char '\n' <?> "LF"
     return ()
 
-skipBlank :: Parser r ()
+skipBlank :: Parser ()
 skipBlank = skipMany (satisfy (inClass " \t"))

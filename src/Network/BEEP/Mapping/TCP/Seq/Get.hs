@@ -3,8 +3,8 @@ module Network.BEEP.Mapping.TCP.Seq.Get where
 import Network.BEEP.Mapping.TCP.Seq.Types
 import Network.BEEP.Core.DataFrame.Get
 
-import Data.Attoparsec.Incremental.Char8
-import Data.ByteString.Lazy.Char8
+import Data.Attoparsec.Char8
+import Data.ByteString.Char8
 
 seqFrame = do
     string (pack "SEQ") <?> "SEQ"
