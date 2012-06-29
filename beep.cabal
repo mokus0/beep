@@ -2,17 +2,21 @@ name:                   beep
 version:                0.0.0.1
 stability:              experimental
 
-cabal-version:          >= 1.2
+cabal-version:          >= 1.6
 build-type:             Simple
 
 author:                 James Cook <your email here>
 maintainer:             James Cook <your email here>
-license:                BSD3
+license:                PublicDomain
 homepage:               /dev/null
 
 category:               Unclassified
 synopsis:               I'm too lame to describe my project
 description:            I'm too lame to describe my project
+
+source-repository head
+  type: git
+  location: git://github.com/mokus0/beep.git
 
 Library
   ghc-options:          -fwarn-unused-imports
@@ -34,7 +38,7 @@ Library
                         
                         
   build-depends:        attoparsec,
-                        base >= 4,
+                        base >= 4 && < 5,
                         binary,
                         bytestring, 
                         bytestring-class,
